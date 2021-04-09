@@ -1,0 +1,101 @@
+#!/bin/bash
+# usage function
+function usage()
+{
+   cat << HEREDOC
+
+   Usage: $progname [--vcf VCF_PATH] [--out OUT_DIR] [--prefix PREFIX] [--pop POPULATION]
+
+   required arguments:
+     -vcf, --vcf VCF_FILE path to input VCF file
+     -o, --out OUT_DIR directory to store results
+     -p, --prefix PREFIX prefix of output files
+     -pop, --pop POP 1KG Subpopulation
+
+   optional arguments:
+     -h, --help           show this help message and exit
+     -d, --data DATA_DIR  directory that 1KG files are stored (Default:data/)
+     -s, --software SOFTWARE_DIR  directory of required executables (Default:software/)
+     -maf, --maf MAF  MAF cutoff (Default:0.01)
+     -hwe, --hwe HWE  hwe p-value (Default:1e-6)
+     -t, --threads N_CORES number of CPU cores (Default:1)
+HEREDOC
+}  
+
+#Default arguments
+data='data/'
+software='software/'
+maf='0.01'
+hwe='1e-6'
+threads='1'
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -h|--help)
+    usage; exit;
+    ;;
+    -vcf|--vcf)
+    vcf="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -d|--data)
+    data="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -o|--out)
+    out="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -s|--software)
+    software="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -p|--prefix)
+    prefix="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -maf|--maf)
+    maf="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -hwe|--hwe)
+    hwe="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -t|--threads)
+    threads="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -pop|--pop)
+    pop="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+echo $vcf
+echo $out
+echo $prefix
+echo $pop
+echo $data
+echo $software
+echo $maf
+echo $hwe
+echo $threads
+Rscript src/Run_PCA.R $vcf $out $prefix $pop $data $software $maf $hwe $threads
