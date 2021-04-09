@@ -9,7 +9,12 @@ Overlay samples onto 1KG reference in genetic principal component (PC) space.
  - bcftools (v1.10.2)
 
 ## Data
-Required 1KG data can be downloaded from: https://doi.org/10.5281/zenodo.4677159 
+### Download VCF Files:
+`./src/download_1000genomes_vcf data/`
+### Concatenate VCF Files:
+`bcftools concat ALL.chr*vcf.gz -O z -o data/joined.1000genomes.vcf.gz`
+### Create VCF File Index:
+`bcftools index -t data/joined.1000genomes.vcf.gz`
 
 ## Usage
 ### Example 1: To overlay samples onto all 1KG superpopulations:
