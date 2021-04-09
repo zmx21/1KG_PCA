@@ -14,7 +14,7 @@ RunPCA1KG <- function(VCF_path,out_dir,software_dir = NULL,data_dir = './data/',
   }
   
   #Set Path and variables
-  ref_file <- glue::glue("{data_dir}/joined.1000genomes")
+  ref_file <- glue::glue("{data_dir}/joined.1000genomes.vcf.gz")
   excl_regions <- glue::glue("{data_dir}/exclusion_regions_hg19.txt") #https://genome.sph.umich.edu/wiki/Regions_of_high_linkage_disequilibrium
   super_pop <- data.table::fread(glue::glue('{data_dir}/20131219.populations.tsv'))
   tbl_1KG <- data.table::fread(glue::glue('{data_dir}/20130606_g1k.ped')) %>% dplyr::left_join(super_pop,by = c('Population' = 'Population Code'))
@@ -57,7 +57,7 @@ RunPCA1KG <- function(VCF_path,out_dir,software_dir = NULL,data_dir = './data/',
   #Solve SNP ID issue
   system(
     glue::glue(
-      "{PLINK}2 --bfile {ref_file} --threads {n_cores} --make-bed --keep-allele-order --set-all-var-ids @:#[b37]\\$r,\\$a --out {tmp_dir}{prefix}_1KG --autosome"
+      "{PLINK}2 --vcf {ref_file} --threads {n_cores} --make-bed --keep-allele-order --set-all-var-ids @:#[b37]\\$r,\\$a --out {tmp_dir}{prefix}_1KG --autosome"
     )
   )
   snps_1KG <- data.table::fread(glue::glue("{tmp_dir}{prefix}_1KG.bim"))
@@ -112,10 +112,10 @@ RunPCA1KG <- function(VCF_path,out_dir,software_dir = NULL,data_dir = './data/',
   )
 
   #If subpopulation is specified, calculate PCA based on merge with subpop
-  if(!is.null(sub_pop)){
+  if(sub_pop!='NA'){
     #Calculate PCA on the merged AFR cohort
     Non_SubPop_Samples <- dplyr::filter(tbl_1KG,`Super Population` != sub_pop) %>% dplyr::select(`Individual ID`)
-    consensus_fam_file <- data.table::fread(glue::glue("{tmp_dir}{prefix}_1KG_Cohort_consensus.fam")) %>% dplyr::filter(V2 %in% Non_AFR_Samples$`Individual ID`) %>% dplyr::select(V1,V2)
+    consensus_fam_file <- data.table::fread(glue::glue("{tmp_dir}{prefix}_1KG_Cohort_consensus.fam")) %>% dplyr::filter(V2 %in% Non_SubPop_Samples$`Individual ID`) %>% dplyr::select(V1,V2)
     data.table::fwrite(consensus_fam_file,col.names = F,row.names = F,sep = ' ',file = glue::glue("{tmp_dir}{prefix}_1KG_Non_{sub_pop}.txt"))
     system(
       glue::glue(
@@ -174,25 +174,26 @@ pc_plot_thousand_genome_PC1_PC2 <- ggplot(data = merged_df) +
   geom_point() + scale_shape_manual(values = c(20,4)) +
   xlab(paste0('PC1 (',signif(var_explained[1],2),'%)'))  +
   ylab(paste0('PC2 (',signif(var_explained[2],2),'%)'))
-ggsave(pc_plot_thousand_genome_PC1_PC2,glue::glue("{out_dir}PCA_Plot.png"))
+ggsave(pc_plot_thousand_genome_PC1_PC2,filename = glue::glue("{out_dir}PCA_Plot.png"))
 
-
-#Supopulation 1KG
-pc_df_Pop <- data.table::fread(glue::glue("{out_dir}{prefix}_{sub_pop}.eigenvec"))
-colnames(pc_df_Pop) <- c('FID','IID',paste0('PC',seq(1,ncol(pc_df_Pop) - 2)))
-# #Remove ID Prefix
-pc_df_Pop$IID <- sapply(pc_df_Pop$IID,function(x) ifelse(grepl(pattern='_',x=x),strsplit(x=x,split = '_')[[1]][2],x))
-
-merged_df_Pop<- pc_df_Pop %>%
-  dplyr::left_join(tbl_1KG,c('IID'='Individual ID'))
-merged_df_Pop$`Data Set` <- as.factor(ifelse(is.na(merged_df_Pop$Population),'Study Cohort','1000 Genomes'))
-
-eigen_val_Pop <- as.vector(data.table::fread(glue::glue("{out_dir}{prefix}_{sub_pop}.eigenval")))
-var_explained_Pop <- eigen_val_afr / sum(eigen_val_afr) * 100
-
-pc_plot_Pop_pc1_pc2 <- ggplot(data = merged_df_Pop) +
-  aes(x=PC1,y=PC2,color=`Population Description`,shape=`Data Set`) +
-  geom_point() + scale_shape_manual(values = c(20,4)) +
-  xlab(paste0('PC1 (',signif(var_explained_afr[1],2),'%)'))  +
-  ylab(paste0('PC2 (',signif(var_explained_afr[2],2),'%)'))
-ggsave(pc_plot_thousand_genome_PC1_PC2,glue::glue("{out_dir}PCA_{sub_pop}_Plot.png"))
+if(sub_pop!='NA'){
+  #Supopulation 1KG
+  pc_df_Pop <- data.table::fread(glue::glue("{out_dir}{prefix}_{sub_pop}.eigenvec"))
+  colnames(pc_df_Pop) <- c('FID','IID',paste0('PC',seq(1,ncol(pc_df_Pop) - 2)))
+  # #Remove ID Prefix
+  pc_df_Pop$IID <- sapply(pc_df_Pop$IID,function(x) ifelse(grepl(pattern='_',x=x),strsplit(x=x,split = '_')[[1]][2],x))
+  
+  merged_df_Pop<- pc_df_Pop %>%
+    dplyr::left_join(tbl_1KG,c('IID'='Individual ID'))
+  merged_df_Pop$`Data Set` <- as.factor(ifelse(is.na(merged_df_Pop$Population),'Study Cohort','1000 Genomes'))
+  
+  eigen_val_Pop <- as.vector(data.table::fread(glue::glue("{out_dir}{prefix}_{sub_pop}.eigenval")))
+  var_explained_Pop <- eigen_val_Pop / sum(eigen_val_Pop) * 100
+  
+  pc_plot_Pop_pc1_pc2 <- ggplot(data = merged_df_Pop) +
+    aes(x=PC1,y=PC2,color=`Population Description`,shape=`Data Set`) +
+    geom_point() + scale_shape_manual(values = c(20,4)) +
+    xlab(paste0('PC1 (',signif(var_explained_Pop[1],2),'%)'))  +
+    ylab(paste0('PC2 (',signif(var_explained_Pop[2],2),'%)'))
+  ggsave(pc_plot_Pop_pc1_pc2,filename = glue::glue("{out_dir}PCA_{sub_pop}_Plot.png")) 
+}

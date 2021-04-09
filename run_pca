@@ -10,12 +10,12 @@ function usage()
      -vcf, --vcf VCF_FILE path to input VCF file
      -o, --out OUT_DIR directory to store results
      -p, --prefix PREFIX prefix of output files
-     -pop, --pop POP 1KG Subpopulation
 
    optional arguments:
      -h, --help           show this help message and exit
-     -d, --data DATA_DIR  directory that 1KG files are stored (Default:data/)
+     -d, --data DATA_DIR  directory that 1KG files are stored (Default:1KG_data/)
      -s, --software SOFTWARE_DIR  directory of required executables (Default:software/)
+     -pop, --pop POP 1KG Subpopulation
      -maf, --maf MAF  MAF cutoff (Default:0.01)
      -hwe, --hwe HWE  hwe p-value (Default:1e-6)
      -t, --threads N_CORES number of CPU cores (Default:1)
@@ -23,11 +23,12 @@ HEREDOC
 }  
 
 #Default arguments
-data='data/'
+data='1KG_data/'
 software='software/'
 maf='0.01'
 hwe='1e-6'
 threads='1'
+pop='NA'
 POSITIONAL=()
 while [[ $# -gt 0 ]]
 do
@@ -89,13 +90,13 @@ case $key in
 esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
-echo $vcf
-echo $out
-echo $prefix
-echo $pop
-echo $data
-echo $software
-echo $maf
-echo $hwe
-echo $threads
+echo "VCF_PATH:"$vcf
+echo "OUT_PATH:"$out
+echo "PREFIX:"$prefix
+echo "SUB_POP:"$pop
+echo "DATA_DIR:"$data
+echo "SOFTWARE_DIR:"$software
+echo "MAF:"$maf
+echo "HWE:"$hwe
+echo "THREADS:"$threads
 Rscript src/Run_PCA.R $vcf $out $prefix $pop $data $software $maf $hwe $threads
