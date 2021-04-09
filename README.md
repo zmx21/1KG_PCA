@@ -12,7 +12,7 @@ Overlay samples onto 1KG reference in genetic principal component (PC) space.
 ### Download 1KG VCF Files:
 `./src/download_1000genomes_vcf 1KG_data/`
 ### Concatenate VCF Files:
-`bcftools concat ALL.chr{1..22}*vcf.gz -O z -o 1KG_data/joined.1000genomes.vcf.gz`
+`bcftools concat 1KG_data/ALL.chr{1..22}*vcf.gz -O z -o 1KG_data/joined.1000genomes.vcf.gz`
 ### Create VCF File Index:
 `bcftools index -t 1KG_data/joined.1000genomes.vcf.gz`
 
