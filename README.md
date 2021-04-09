@@ -24,7 +24,7 @@ Required 1KG data can be downloaded from: https://doi.org/10.5281/zenodo.4677159
 ### Additional options
 `./run_pca -h` for full list of commands. 
  - `-d` path to directory with required 1KG data
- - `-s` directory to directory with software executables 
+ - `-s` directory to software executables 
  - `-maf` specifies minor allele frequency cutoff 
  - `-hwe` specified hardy-weinberg equilibrium p-val cutoff
  - `-t` number of CPU threads 
