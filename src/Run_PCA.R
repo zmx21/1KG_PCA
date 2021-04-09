@@ -157,8 +157,6 @@ tbl_1KG <- data.table::fread(glue::glue('{data_dir}20130606_g1k.ped')) %>% dplyr
 #Load PCA results
 pc_df <- data.table::fread(glue::glue("{out_dir}{prefix}.eigenvec"))
 colnames(pc_df) <- c('FID','IID',paste0('PC',seq(1,ncol(pc_df) - 2)))
-#Remove ID Prefix
-pc_df$IID <- sapply(pc_df$IID,function(x) ifelse(grepl(pattern='_',x=x),strsplit(x=x,split = '_')[[1]][2],x))
 #Plot with all Superpopulations
 merged_df <- pc_df %>%
   dplyr::left_join(tbl_1KG,c('IID'='Individual ID'))
@@ -180,9 +178,6 @@ if(sub_pop!='NA'){
   #Supopulation 1KG
   pc_df_Pop <- data.table::fread(glue::glue("{out_dir}{prefix}_{sub_pop}.eigenvec"))
   colnames(pc_df_Pop) <- c('FID','IID',paste0('PC',seq(1,ncol(pc_df_Pop) - 2)))
-  # #Remove ID Prefix
-  pc_df_Pop$IID <- sapply(pc_df_Pop$IID,function(x) ifelse(grepl(pattern='_',x=x),strsplit(x=x,split = '_')[[1]][2],x))
-  
   merged_df_Pop<- pc_df_Pop %>%
     dplyr::left_join(tbl_1KG,c('IID'='Individual ID'))
   merged_df_Pop$`Data Set` <- as.factor(ifelse(is.na(merged_df_Pop$Population),'Study Cohort','1000 Genomes'))
