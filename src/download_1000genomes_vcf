@@ -1,0 +1,9 @@
+#!/bin/bash
+target_dir=$1
+prefix="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr" ;
+suffix=".phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz" ;
+
+for chr in {1..22}; do
+    wget -P $target_dir "${prefix}""${chr}""${suffix}".tbi
+    wget -P $target_dir "${prefix}""${chr}""${suffix}"
+done
