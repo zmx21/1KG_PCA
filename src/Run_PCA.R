@@ -27,7 +27,7 @@ RunPCA1KG <- function(VCF_path,out_dir,software_dir = NULL,data_dir = './data/',
   #Remove Duplicate entries in VCF
   no_dup_vcf <- basename(gsub(x=VCF_path,pattern = '.vcf.gz',replacement = '.nodup.vcf.gz'))
   system(
-    glue::glue("{bcftools} norm -d snps {VCF_path} | {bcftools} view -O z -o {tmp_dir}{no_dup_vcf}")
+    glue::glue("{bcftools} norm -d snps {VCF_path} | {bcftools} view -m2 -M2 -v snps -O z -o {tmp_dir}{no_dup_vcf}")
   )
   system(
     glue::glue("{bcftools} index -t {tmp_dir}{no_dup_vcf}")
@@ -57,7 +57,7 @@ RunPCA1KG <- function(VCF_path,out_dir,software_dir = NULL,data_dir = './data/',
   #Solve SNP ID issue
   system(
     glue::glue(
-      "{PLINK}2 --vcf {ref_file} --threads {n_cores} --make-bed --keep-allele-order --set-all-var-ids @:#[b37]\\$r,\\$a --out {tmp_dir}{prefix}_1KG --autosome"
+      "{PLINK}2 --vcf {ref_file} --threads {n_cores} --make-bed --keep-allele-order --max-alleles 2 --min-alleles 2 --rm-dup exclude-all --snps-only just-acgt --set-all-var-ids @:#[b37]\\$r,\\$a --out {tmp_dir}{prefix}_1KG --autosome"
     )
   )
   snps_1KG <- data.table::fread(glue::glue("{tmp_dir}{prefix}_1KG.bim"))
